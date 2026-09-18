@@ -10,33 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TournamentDoticsRouteImport } from './routes/tournament[.]ics'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TournamentDoticsRoute = TournamentDoticsRouteImport.update({
+  id: '/tournament.ics',
+  path: '/tournament.ics',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/tournament.ics': typeof TournamentDoticsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/tournament.ics': typeof TournamentDoticsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/tournament.ics': typeof TournamentDoticsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/tournament.ics'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/tournament.ics'
+  id: '__root__' | '/' | '/tournament.ics'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  TournamentDoticsRoute: typeof TournamentDoticsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +58,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tournament.ics': {
+      id: '/tournament.ics'
+      path: '/tournament.ics'
+      fullPath: '/tournament.ics'
+      preLoaderRoute: typeof TournamentDoticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  TournamentDoticsRoute: TournamentDoticsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
