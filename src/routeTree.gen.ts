@@ -10,12 +10,24 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OrganizerRouteImport } from './routes/organizer'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as SuccessRouteImport } from './routes/success'
 import { Route as TournamentDoticsRouteImport } from './routes/tournament[.]ics'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrganizerRoute = OrganizerRouteImport.update({
+  id: '/organizer',
+  path: '/organizer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SuccessRoute = SuccessRouteImport.update({
@@ -31,30 +43,44 @@ const TournamentDoticsRoute = TournamentDoticsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/organizer': typeof OrganizerRoute
+  '/register': typeof RegisterRoute
   '/success': typeof SuccessRoute
   '/tournament.ics': typeof TournamentDoticsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/organizer': typeof OrganizerRoute
+  '/register': typeof RegisterRoute
   '/success': typeof SuccessRoute
   '/tournament.ics': typeof TournamentDoticsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/organizer': typeof OrganizerRoute
+  '/register': typeof RegisterRoute
   '/success': typeof SuccessRoute
   '/tournament.ics': typeof TournamentDoticsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/success' | '/tournament.ics'
+  fullPaths: '/' | '/organizer' | '/register' | '/success' | '/tournament.ics'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/success' | '/tournament.ics'
-  id: '__root__' | '/' | '/success' | '/tournament.ics'
+  to: '/' | '/organizer' | '/register' | '/success' | '/tournament.ics'
+  id:
+    | '__root__'
+    | '/'
+    | '/organizer'
+    | '/register'
+    | '/success'
+    | '/tournament.ics'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  OrganizerRoute: typeof OrganizerRoute
+  RegisterRoute: typeof RegisterRoute
   SuccessRoute: typeof SuccessRoute
   TournamentDoticsRoute: typeof TournamentDoticsRoute
 }
@@ -66,6 +92,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/organizer': {
+      id: '/organizer'
+      path: '/organizer'
+      fullPath: '/organizer'
+      preLoaderRoute: typeof OrganizerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/success': {
@@ -87,6 +127,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  OrganizerRoute: OrganizerRoute,
+  RegisterRoute: RegisterRoute,
   SuccessRoute: SuccessRoute,
   TournamentDoticsRoute: TournamentDoticsRoute,
 }
