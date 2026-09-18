@@ -14,7 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      registrations: {
+        Row: {
+          attend: boolean
+          calendar_invite_status: string
+          comments: string | null
+          company: string | null
+          created_at: string
+          delivery_error: string | null
+          donate_prizes: boolean
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          organizer_email_status: string
+          participants: number
+          player_names: string | null
+          prize_description: string | null
+          registrant_email_status: string
+          sponsor_hole: boolean
+          sponsorship_notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          attend?: boolean
+          calendar_invite_status?: string
+          comments?: string | null
+          company?: string | null
+          created_at?: string
+          delivery_error?: string | null
+          donate_prizes?: boolean
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          organizer_email_status?: string
+          participants?: number
+          player_names?: string | null
+          prize_description?: string | null
+          registrant_email_status?: string
+          sponsor_hole?: boolean
+          sponsorship_notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attend?: boolean
+          calendar_invite_status?: string
+          comments?: string | null
+          company?: string | null
+          created_at?: string
+          delivery_error?: string | null
+          donate_prizes?: boolean
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          organizer_email_status?: string
+          participants?: number
+          player_names?: string | null
+          prize_description?: string | null
+          registrant_email_status?: string
+          sponsor_hole?: boolean
+          sponsorship_notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
