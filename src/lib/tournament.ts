@@ -59,9 +59,11 @@ export function formatEventDate() {
 
 export function formatTimeRange() {
   const fmt = (t: string) => {
-    const [h, m] = t.split(":").map(Number);
+    const parts = t.split(":");
+    const h = Number(parts[0] ?? 0);
+    const m = Number(parts[1] ?? 0);
     const hour = h % 12 === 0 ? 12 : h % 12;
-    const suffix = (h ?? 0) < 12 ? "AM" : "PM";
+    const suffix = h < 12 ? "AM" : "PM";
     return `${hour}:${String(m).padStart(2, "0")} ${suffix}`;
   };
   return `${fmt(tournament.startTime)} – ${fmt(tournament.endTime)} ${tournament.timeZoneLabel}`;
