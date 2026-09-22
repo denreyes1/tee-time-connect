@@ -11,7 +11,7 @@ export const tournament = {
   timeZoneLabel: "Eastern Time (ET)",
   courseName: "[Golf Course Name]",
   address: "[123 Fairway Drive, City, Province/State, Postal Code]",
-  websiteUrl: "https://[your-tournament-site].lovable.app",
+  websiteUrl: "https://[your-tournament-site].example.com",
   overview:
     "Join us for a full day of championship golf in support of [Cause / Charity]. The scramble-format tournament welcomes players of every skill level, with contests on the course, a catered lunch, and an awards reception to close the day.",
   schedule: [

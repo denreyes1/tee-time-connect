@@ -100,19 +100,9 @@ Use a real backend for registration storage, email notifications, and calendar i
 
 Include form validation, basic spam protection, duplicate-submission prevention, and clear loading, success, and error states. Save registrations even if an email or calendar service fails, and make failed deliveries visible to the organizer for retry.
 
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/7d7d20eb-373e-4256-a52b-a0c8b7f3edf6).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
 git clone <this-repository-url>
@@ -120,3 +110,23 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Configuration
+
+Registration always saves to Supabase even if outbound delivery fails. Set these server-side environment variables for email and calendar invites:
+
+| Variable | Purpose |
+| --- | --- |
+| `EMAIL_SENDER_DOMAIN` | Verified sender domain for notification email (e.g. `notify.example.com`) |
+| `LOVABLE_API_KEY` | Messaging API key — organizer notification + registrant acknowledgement |
+| `RESEND_API_KEY` | Resend API key — calendar ICS invite with RSVP (Yes / Maybe / No) |
+| `RESEND_FROM` | From address for calendar invites (e.g. `Tournament <noreply@notify.example.com>`) |
+| `ORGANIZER_PASSWORD` | Password gate for the `/organizer` dashboard |
+| `SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key for secure registration writes |
+
+Also ensure `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` are set for the client.
+
+Missing email or calendar config is recorded as `not_configured` on each registration. Use **Retry delivery** on the organizer dashboard after credentials are configured.
+
+Edit tournament copy and placeholders in `src/lib/tournament.ts`.

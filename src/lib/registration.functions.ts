@@ -114,16 +114,20 @@ export interface RegistrationRow {
   delivery_error: string | null;
 }
 
+function assertOrganizerPassword(password: string) {
+  const expected = process.env["ORGANIZER_PASSWORD"];
+  if (!expected) {
+    throw new Error("Organizer password is not configured yet.");
+  }
+  if (password !== expected) {
+    throw new Error("Incorrect password.");
+  }
+}
+
 export const listRegistrations = createServerFn({ method: "POST" })
   .inputValidator((data: { password: string }) => ({ password: String(data.password ?? "") }))
   .handler(async ({ data }) => {
-    const expected = process.env["ORGANIZER_PASSWORD"];
-    if (!expected) {
-      throw new Error("Organizer password is not configured yet.");
-    }
-    if (data.password !== expected) {
-      throw new Error("Incorrect password.");
-    }
+    assertOrganizerPassword(data.password);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
@@ -133,4 +137,72 @@ export const listRegistrations = createServerFn({ method: "POST" })
 
     if (error) throw new Error("Could not load registrations.");
     return { registrations: (rows ?? []) as unknown as RegistrationRow[] };
+  });
+
+export const retryDelivery = createServerFn({ method: "POST" })
+  .inputValidator((data: { password: string; registrationId: string }) => ({
+    password: String(data.password ?? ""),
+    registrationId: String(data.registrationId ?? ""),
+  }))
+  .handler(async ({ data }) => {
+    assertOrganizerPassword(data.password);
+    if (!data.registrationId) {
+      throw new Error("Missing registration id.");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin
+      .from("registrations")
+      .select("*")
+      .eq("id", data.registrationId)
+      .single();
+
+    if (error || !row) {
+      throw new Error("Registration not found.");
+    }
+
+    const registration = row as unknown as RegistrationRow;
+    const { deliverRegistrationNotifications } = await import("./notifications.server");
+    const delivery = await deliverRegistrationNotifications(
+      {
+        id: registration.id,
+        firstName: registration.first_name,
+        lastName: registration.last_name,
+        email: registration.email,
+        company: registration.company || undefined,
+        participants: registration.participants,
+        playerNames: registration.player_names || undefined,
+        comments: registration.comments || undefined,
+        attend: registration.attend,
+        donatePrizes: registration.donate_prizes,
+        sponsorHole: registration.sponsor_hole,
+        prizeDescription: registration.prize_description || undefined,
+        sponsorshipNotes: registration.sponsorship_notes || undefined,
+      },
+      {
+        skipAlreadySent: {
+          organizer: registration.organizer_email_status,
+          registrant: registration.registrant_email_status,
+          calendar: registration.calendar_invite_status,
+        },
+      },
+    );
+
+    const { data: updated, error: updateError } = await supabaseAdmin
+      .from("registrations")
+      .update({
+        organizer_email_status: delivery.organizer,
+        registrant_email_status: delivery.registrant,
+        calendar_invite_status: delivery.calendar,
+        delivery_error: delivery.error ?? null,
+      })
+      .eq("id", registration.id)
+      .select("*")
+      .single();
+
+    if (updateError || !updated) {
+      throw new Error("Could not update delivery status.");
+    }
+
+    return { registration: updated as unknown as RegistrationRow, delivery };
   });

@@ -2,7 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { tournament } from "@/lib/tournament";
-import { listRegistrations, type RegistrationRow } from "@/lib/registration.functions";
+import {
+  listRegistrations,
+  retryDelivery,
+  type RegistrationRow,
+} from "@/lib/registration.functions";
 
 export const Route = createFileRoute("/organizer")({
   head: () => ({
@@ -23,6 +27,12 @@ function options(r: RegistrationRow) {
   return [r.attend && "Attend", r.donate_prizes && "Prizes", r.sponsor_hole && "Hole sponsor"]
     .filter(Boolean)
     .join(", ");
+}
+
+function needsRetry(r: RegistrationRow) {
+  return [r.organizer_email_status, r.registrant_email_status, r.calendar_invite_status].some(
+    (s) => s !== "sent",
+  );
 }
 
 function toCsv(rows: RegistrationRow[]) {
@@ -70,10 +80,13 @@ function toCsv(rows: RegistrationRow[]) {
 
 function Organizer() {
   const load = useServerFn(listRegistrations);
+  const retry = useServerFn(retryDelivery);
   const [password, setPassword] = useState("");
   const [rows, setRows] = useState<RegistrationRow[] | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [error, setError] = useState("");
+  const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [retryError, setRetryError] = useState("");
 
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
@@ -98,6 +111,21 @@ function Organizer() {
     a.download = "registrations.csv";
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function handleRetry(id: string) {
+    setRetryingId(id);
+    setRetryError("");
+    try {
+      const res = await retry({ data: { password, registrationId: id } });
+      setRows((prev) =>
+        prev ? prev.map((r) => (r.id === id ? res.registration : r)) : prev,
+      );
+    } catch (err) {
+      setRetryError(err instanceof Error ? err.message : "Retry failed.");
+    } finally {
+      setRetryingId(null);
+    }
   }
 
   if (!rows) {
@@ -127,11 +155,7 @@ function Organizer() {
   }
 
   const totalPlayers = rows.reduce((sum, r) => sum + (r.attend ? r.participants : 0), 0);
-  const failed = rows.filter((r) =>
-    [r.organizer_email_status, r.registrant_email_status, r.calendar_invite_status].some(
-      (s) => s !== "sent",
-    ),
-  );
+  const failed = rows.filter(needsRetry);
 
   return (
     <main className="min-h-screen bg-background px-4 py-10">
@@ -152,9 +176,12 @@ function Organizer() {
         {failed.length > 0 && (
           <div className="mt-6 rounded-md border border-gold bg-gold-soft/40 p-4 text-sm">
             {failed.length} registration{failed.length === 1 ? "" : "s"} have an email or calendar
-            invitation that hasn't been delivered yet. See the delivery columns below.
+            invitation that hasn't been delivered yet. Use Retry delivery on each row after
+            configuring email services.
           </div>
         )}
+
+        {retryError && <p className="mt-4 text-sm text-destructive">{retryError}</p>}
 
         <div className="card-elevated mt-6 overflow-x-auto">
           <table className="w-full min-w-[900px] text-left text-sm">
@@ -198,6 +225,16 @@ function Organizer() {
                     <div>Organizer: {r.organizer_email_status}</div>
                     <div>Registrant: {r.registrant_email_status}</div>
                     <div>Calendar: {r.calendar_invite_status}</div>
+                    {needsRetry(r) && (
+                      <button
+                        type="button"
+                        className="btn-outline mt-2 px-2 py-1 text-xs"
+                        disabled={retryingId === r.id}
+                        onClick={() => handleRetry(r.id)}
+                      >
+                        {retryingId === r.id ? "Retrying…" : "Retry delivery"}
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
